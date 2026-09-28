@@ -1,0 +1,19 @@
+# Salesforce
+.sfdx/
+.sf/
+.vscode/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Salesforce local files
+*.org

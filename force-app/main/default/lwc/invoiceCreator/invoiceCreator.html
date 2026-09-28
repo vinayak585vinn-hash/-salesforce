@@ -1,0 +1,315 @@
+<template>
+
+    <lightning-card
+        title="Create Invoice"
+        icon-name="standard:product">
+
+        <div class="slds-p-around_medium">
+
+            <!-- ===================================================== -->
+            <!-- STEP 1 - INVOICE INFORMATION -->
+            <!-- ===================================================== -->
+
+            <template if:true={isStepOne}>
+
+                <h2 class="slds-text-heading_medium slds-m-bottom_medium">
+                    Step 1: Invoice Information
+                </h2>
+
+                <!-- Customer -->
+                <lightning-input
+                    type="text"
+                    label="Customer"
+                    value={customerName}
+                    disabled>
+                </lightning-input>
+
+                <!-- Opportunity -->
+                <lightning-input
+                    type="text"
+                    label="Opportunity"
+                    value={opportunityName}
+                    disabled
+                    class="slds-m-top_small">
+                </lightning-input>
+
+                <!-- Invoice Date -->
+                <lightning-input
+                    type="date"
+                    label="Invoice Date"
+                    value={invoiceDate}
+                    onchange={handleInvoiceDateChange}
+                    required
+                    class="slds-m-top_small">
+                </lightning-input>
+
+                <!-- Error Message -->
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium"
+                        role="alert">
+
+                        <span class="slds-assistive-text">
+                            Error
+                        </span>
+
+                        <span>
+                            {errorMessage}
+                        </span>
+
+                    </div>
+                </template>
+
+                <!-- Loading Spinner -->
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-m-top_medium">
+                        <lightning-spinner
+                            alternative-text="Loading"
+                            size="small">
+                        </lightning-spinner>
+                    </div>
+                </template>
+
+                <!-- Next Button -->
+                <div class="slds-m-top_large slds-text-align_right">
+
+                    <lightning-button
+                        variant="brand"
+                        label="Next"
+                        onclick={handleNext}
+                        disabled={isLoading}>
+                    </lightning-button>
+
+                </div>
+
+            </template>
+
+
+            <!-- ===================================================== -->
+            <!-- STEP 2 - INVOICE LINE ITEMS -->
+            <!-- ===================================================== -->
+
+            <template if:true={isStepTwo}>
+
+                <h2 class="slds-text-heading_medium slds-m-bottom_medium">
+                    Step 2: Add Invoice Line Items
+                </h2>
+
+
+                <!-- Line Items -->
+                <template
+                    for:each={lineItems}
+                    for:item="item">
+
+                    <div
+                        key={item.id}
+                        class="slds-box slds-m-bottom_small">
+
+                        <div class="slds-grid slds-wrap slds-gutters">
+
+                            <!-- Product -->
+                            <div
+                                class="slds-col
+                                       slds-size_1-of-1
+                                       slds-medium-size_5-of-12">
+
+                                <lightning-combobox
+                                    label="Product"
+                                    value={item.productId}
+                                    options={productOptions}
+                                    data-id={item.id}
+                                    onchange={handleProductChange}
+                                    placeholder="Select Product"
+                                    required>
+                                </lightning-combobox>
+
+                            </div>
+
+
+                            <!-- Quantity -->
+                            <div
+                                class="slds-col
+                                       slds-size_1-of-2
+                                       slds-medium-size_2-of-12">
+
+                                <lightning-input
+                                    type="number"
+                                    label="Quantity"
+                                    value={item.quantity}
+                                    min="0.01"
+                                    step="0.01"
+                                    data-id={item.id}
+                                    onchange={handleQuantityChange}
+                                    required>
+                                </lightning-input>
+
+                            </div>
+
+
+                            <!-- Unit Price -->
+                            <div
+                                class="slds-col
+                                       slds-size_1-of-2
+                                       slds-medium-size_2-of-12">
+
+                                <lightning-input
+                                    type="number"
+                                    label="Unit Price"
+                                    value={item.unitPrice}
+                                    formatter="currency"
+                                    disabled>
+                                </lightning-input>
+
+                            </div>
+
+
+                            <!-- Line Total -->
+                            <div
+                                class="slds-col
+                                       slds-size_1-of-2
+                                       slds-medium-size_2-of-12">
+
+                                <lightning-input
+                                    type="number"
+                                    label="Line Total"
+                                    value={item.lineTotal}
+                                    formatter="currency"
+                                    disabled>
+                                </lightning-input>
+
+                            </div>
+
+
+                            <!-- Delete -->
+                            <div
+                                class="slds-col
+                                       slds-size_1-of-2
+                                       slds-medium-size_1-of-12
+                                       slds-align_absolute-center">
+
+                                <lightning-button-icon
+                                    icon-name="utility:delete"
+                                    alternative-text="Remove Line Item"
+                                    title="Remove Line Item"
+                                    data-id={item.id}
+                                    onclick={removeLineItem}>
+                                </lightning-button-icon>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+
+                <!-- Add Line Item -->
+                <div class="slds-m-top_small">
+
+                    <lightning-button
+                        label="Add Line Item"
+                        icon-name="utility:add"
+                        onclick={addLineItem}>
+                    </lightning-button>
+
+                </div>
+
+
+                <!-- Grand Total -->
+                <div
+                    class="slds-box
+                           slds-theme_default
+                           slds-m-top_medium">
+
+                    <div
+                        class="slds-grid
+                               slds-grid_align-spread
+                               slds-grid_vertical-align-center">
+
+                        <div>
+                            <span class="slds-text-heading_small">
+                                Grand Total
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="slds-text-heading_medium">
+                                {formattedGrandTotal}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Error Message -->
+                <template if:true={errorMessage}>
+
+                    <div
+                        class="slds-notify
+                               slds-notify_alert
+                               slds-theme_error
+                               slds-m-top_medium"
+                        role="alert">
+
+                        <span class="slds-assistive-text">
+                            Error
+                        </span>
+
+                        <span>
+                            {errorMessage}
+                        </span>
+
+                    </div>
+
+                </template>
+
+
+                <!-- Loading Spinner -->
+                <template if:true={isLoading}>
+
+                    <div class="slds-is-relative slds-m-top_medium">
+
+                        <lightning-spinner
+                            alternative-text="Saving Invoice"
+                            size="small">
+                        </lightning-spinner>
+
+                    </div>
+
+                </template>
+
+
+                <!-- Navigation Buttons -->
+                <div
+                    class="slds-grid
+                           slds-grid_align-spread
+                           slds-m-top_large">
+
+                    <!-- Back -->
+                    <lightning-button
+                        label="Back"
+                        onclick={handleBack}
+                        disabled={isLoading}>
+                    </lightning-button>
+
+
+                    <!-- Save -->
+                    <lightning-button
+                        variant="brand"
+                        label="Save Invoice"
+                        onclick={handleSave}
+                        disabled={isLoading}>
+                    </lightning-button>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+</template>
